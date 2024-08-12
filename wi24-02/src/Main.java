@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.*;
 public class Main {
 
 	// Google Knowledge Graph Search APIの認証用API Keyに変える 
-	static String gkgsApiKey = "AIzaSyDX4D5-AbkClGw6N-uRQq4_KOtCX0KGr-M";
+	static String gkgsApiKey = "AIzaSyCs0BtUzPCML7BTHCPUENiMPoZbJDcV5L4";
 	
 	public static void main(String[] args) {
 		// Googleナレッジグラフ
@@ -30,6 +30,16 @@ public class Main {
 		System.out.println("[JSON]\n" + wdJson);
 		Map<String, Object> wdMap = json2Map(wdJson);
 		System.out.println("[Map]\n" + wdMap);
+
+		// wdMapから名工大の公式ウェブサイトの属性値（URL）を取り出す
+		System.out.println("[getPropValsメソッドのテスト --- 名工大の公式ウェブサイトのURL]");
+		String prop = "P856";
+		List<Map<String, Object>> resList = (List<Map<String, Object>>) wdMap.get("result");	// 検索結果のリスト
+		for (Map<String, Object> res: resList) {
+			String entityID = getEntityID(res);
+			List<String> propVals = getPropVals(res, prop);
+			System.out.println("エンティティ"+entityID+"のプロパティ"+prop+": "+propVals);
+		}
 	}
 	
 	/**
@@ -138,5 +148,25 @@ public class Main {
     	return sb.toString();
     }
 
+	public static String getEntityID(Map<String, Object> res) {
+		return (String) ((Map)res.get("entities")).keySet().iterator().next();
+	}
 
+	public static List<String> getPropVals(Map<String, Object> res, String prop) {
+		List<String> vals = new ArrayList<String>();
+		String entityID = getEntityID(res);
+		Map entityMap = (Map)((Map)res.get("entities")).get(entityID);
+		Map claimMap = (Map)entityMap.get("claims");
+		if (claimMap != null) {
+			List<Map> propList = (List<Map>) claimMap.get(prop);
+			if (propList != null) {
+				for (Map propMap : propList) {
+					Map<String, Object> valMap = (Map) ((Map) propMap.get("mainsnak")).get("datavalue");
+					String val = (String) valMap.get("value");
+					vals.add(val);
+				}
+			}
+		}
+		return vals;
+	}
 }
