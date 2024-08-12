@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.*;
 public class Main {
 
 	// Google Knowledge Graph Search APIの認証用API Keyに変える 
-	static String gkgsApiKey = "xxxxxx"; 
+	static String gkgsApiKey = "AIzaSyDX4D5-AbkClGw6N-uRQq4_KOtCX0KGr-M";
 	
 	public static void main(String[] args) {
 		// Googleナレッジグラフ
