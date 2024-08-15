@@ -3,8 +3,10 @@ import java.util.*;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.net.*;
+
 import org.jsoup.*;
 
+import com.atilika.kuromoji.ipadic.Token;
 import com.atilika.kuromoji.ipadic.Tokenizer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
@@ -16,11 +18,23 @@ public class Main {
 	static String gkgsApiKey = "xxxxxxx"; 
 	
 	public static void main(String[] args) throws IOException {
-		
+		Tokenizer tokenizer = new Tokenizer();
+
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			System.out.print("You > ");
 			String userInput = in.readLine();  // 標準入力からのユーザ発話を取得
+			List<Token> tokens = tokenizer.tokenize(userInput);
+			// 名詞句を抽出
+			System.out.print("名詞: ");
+			for (Token token: tokens) {
+				if (token.getPartOfSpeechLevel1().equals("名詞")) {
+					System.out.print(token.getSurface() + " ");
+				}
+			}
+			System.out.println();
+
+			// botの返答を生成
 			if (userInput.equals("ばいばい") || userInput.equals("exit")) {
 				System.out.println("Bot > ばいばい");
 				break;
