@@ -33,7 +33,7 @@ public class Main {
 
 		// wdMapから名工大の公式ウェブサイトの属性値（URL）を取り出す
 		System.out.println("[getPropValsメソッドのテスト --- 名工大の公式ウェブサイトのURL]");
-		String prop = "P856";
+		String prop = "P856";	// ウェブサイトURLのプロパティID
 		List<Map<String, Object>> resList = (List<Map<String, Object>>) wdMap.get("result");	// 検索結果のリスト
 		for (Map<String, Object> res: resList) {
 			String entityID = getEntityID(res);
