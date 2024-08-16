@@ -18,21 +18,12 @@ public class Main {
 	static String gkgsApiKey = "xxxxxxx"; 
 	
 	public static void main(String[] args) throws IOException {
-		Tokenizer tokenizer = new Tokenizer();
+
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			System.out.print("You > ");
 			String userInput = in.readLine();  // 標準入力からのユーザ発話を取得
-			List<Token> tokens = tokenizer.tokenize(userInput);
-			// 名詞句を抽出
-			System.out.print("名詞: ");
-			for (Token token: tokens) {
-				if (token.getPartOfSpeechLevel1().equals("名詞")) {
-					System.out.print(token.getSurface() + " ");
-				}
-			}
-			System.out.println();
 
 			// botの返答を生成
 			if (userInput.equals("ばいばい") || userInput.equals("exit")) {
@@ -72,7 +63,45 @@ public class Main {
 	 * @return 生成したbotの返答
 	 */
 	public static String generateResponse(String userInput) {
-		return "「"+userInput+"」ですか、へぇー";
+		Tokenizer tokenizer = new Tokenizer();
+		Random rand = new Random();
+
+		List<Token> tokens = tokenizer.tokenize(userInput);
+		List<String> nouns = new ArrayList<String>();
+		// 名詞句を抽出
+		System.out.print("名詞句: ");
+		for (Token token: tokens) {
+			if (token.getPartOfSpeechLevel1().contains("名詞")) {
+				System.out.print(token.getSurface() + " ");
+				nouns.add(token.getSurface());
+			}
+		}
+		System.out.println();
+
+		// 名詞句があれば、そのうちの一つを選んで返答を生成
+		if (nouns.size() > 0) {
+			int idx = rand.nextInt(nouns.size());
+			String noun = nouns.get(idx);
+			// nounについての情報をWikiDataから取得
+			String wdJson = getWikidataJson(noun);
+			Map<String, Object> wdMap = json2Map(wdJson);
+			String prop = "P279";	// インスタンス"subclass of"のプロパティID
+			List<Map<String, Object>> resList = (List<Map<String, Object>>) wdMap.get("result");
+			List<List<String>> vList = new ArrayList<List<String>>();
+			for (Map<String, Object> res: resList) {
+				// エンティティの指定プロパティがあれば、そのプロパティを取得しvListに追加
+//				String entityID = getEntityID(res);
+				var propVals = getPropVals(res, prop);
+				if (!propVals.isEmpty()) vList.add(propVals);
+//				System.out.println("エンティティ "+entityID+"のプロパティ"+prop+": " + propVals);
+			}
+			if (vList.isEmpty())
+				return "へぇー。"+noun+"といえば、WikiDataでは"+noun+"のスーパークラスは定義されていないみたいですね";
+			else
+				return "へぇー。"+noun+"といえば、WikiDataでは"+vList.get(rand.nextInt(vList.size()))+"のサブクラスですよ";
+		} else {
+			return "「"+userInput+"」ですか、へぇー";
+		}
 	}
 	
 	/**
@@ -91,22 +120,47 @@ public class Main {
 	 * @return
 	 */
 	public static List<String> getPropVals(Map<String, Object> res, String prop) {
-		List<String> vals = new ArrayList<String>();
-		String entityID = getEntityID(res);
-		Map entityMap = (Map)((Map)res.get("entities")).get(entityID);
-		Map claimMap = (Map)entityMap.get("claims");
-		if (claimMap != null) {	
-			List<Map> propList = (List<Map>)claimMap.get(prop);
-			if (propList != null) {
-				for (Map propMap: propList) {
-					Map<String,Object> valMap = (Map)((Map)propMap.get("mainsnak")).get("datavalue");
-					String val = (String)valMap.get("value");
-					vals.add(val);
-				}
-			}
-		}	
-		return vals;
-	}
+    List<String> vals = new ArrayList<String>();
+    String entityID = getEntityID(res);
+    Map entityMap = (Map)((Map)res.get("entities")).get(entityID);
+    Map claimMap = (Map)entityMap.get("claims");
+    if (claimMap != null) {
+        List<Map> propList = (List<Map>)claimMap.get(prop);
+        if (propList != null) {
+            for (Map propMap: propList) {
+                Map<String,Object> valMap = (Map)((Map)propMap.get("mainsnak")).get("datavalue");
+                Object val = valMap.get("value");
+                if (val instanceof String) {
+                    vals.add((String) val);
+                } else if (val instanceof Map) {
+                    // ここでLinkedHashMapから必要な値を取り出す
+                    Map<String, Object> valMapNested = (Map<String, Object>) val;
+                    // 例えば、"id"キーの値を取得する場合
+                    String nestedVal = (String) valMapNested.get("id");
+                    vals.add(nestedVal);
+                }
+            }
+        }
+    }
+    return vals;
+}
+//	public static List<String> getPropVals(Map<String, Object> res, String prop) {
+//		List<String> vals = new ArrayList<String>();
+//		String entityID = getEntityID(res);
+//		Map entityMap = (Map)((Map)res.get("entities")).get(entityID);
+//		Map claimMap = (Map)entityMap.get("claims");
+//		if (claimMap != null) {
+//			List<Map> propList = (List<Map>)claimMap.get(prop);
+//			if (propList != null) {
+//				for (Map propMap: propList) {
+//					Map<String,Object> valMap = (Map)((Map)propMap.get("mainsnak")).get("datavalue");
+//					String val = (String)valMap.get("value");
+//					vals.add(val);
+//				}
+//			}
+//		}
+//		return vals;
+//	}
 	
 	
 	/**
