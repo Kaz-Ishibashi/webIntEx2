@@ -57,3 +57,26 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+
+# tex
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.pdf
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.dvi
+*.png
+*.jpg
+*.svg
+*.eps
+*.sty
+*.tex
+_tex/
+
+# config
+*.properties
